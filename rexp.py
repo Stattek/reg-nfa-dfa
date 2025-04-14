@@ -30,7 +30,7 @@ def remove_empty_parentheses(regex_str: str):
     empty_parentheses = "()"
     # iteratively remove all empty sets of parentheses
     regex_idx = regex_str.find(empty_parentheses)
-    while regex_idx > 0:
+    while regex_idx >= 0:
         # remove this set of parentheses
         regex_str = regex_str[:regex_idx] + regex_str[regex_idx + 2 :]
         regex_idx = regex_str.find(empty_parentheses)
