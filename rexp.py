@@ -2,7 +2,7 @@
 import sys
 
 
-def validate_regex(regex_str: str):
+def validate_regex(regex_str: str) -> bool:
     """Validates a regular expression.
 
     Args:
@@ -14,7 +14,26 @@ def validate_regex(regex_str: str):
     # check if the number of parentheses is consistent
     if regex_str.count("(") != regex_str.count(")"):
         return False
+
+    # remove empty parentheses
+    remove_empty_parentheses(regex_str)
+
     return True
+
+
+def remove_empty_parentheses(regex_str: str):
+    """Removes empty parentheses from a string
+
+    Args:
+        regex_str (str): The regular expression string.
+    """
+    empty_parentheses = "()"
+    # iteratively remove all empty sets of parentheses
+    regex_idx = regex_str.find(empty_parentheses)
+    while regex_idx > 0:
+        # remove this set of parentheses
+        regex_str = regex_str[:regex_idx] + regex_str[regex_idx + 2 :]
+        regex_idx = regex_str.find(empty_parentheses)
 
 
 def main():
@@ -22,6 +41,7 @@ def main():
     if len(sys.argv) != 3:
         # invalid number of arguments
         print("Usage: {} <regex> <file_name>".format(sys.argv[0]))
+        sys.exit(1)
     regex_str = sys.argv[1]
 
     # validate regular expression
