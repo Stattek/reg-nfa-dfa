@@ -34,20 +34,50 @@ class Regex:
 class InfixToPostfix:
     def get_precedence(operator):
         if operator == "*":
-            return Operator.STAR_CLOSURE
+            return Operator.STAR_CLOSURE.value
         elif operator == ".":
-            return Operator.CONCATENATION
-        elif operator == "|":
-            return Operator.ALTERNATION
-        return Operator.UNKNOWN
+            return Operator.CONCATENATION.value
+        else:
+            return Operator.ALTERNATION.value
 
-    def infix_to_postfix(regex_str: str):
+    def infix_to_postfix(regex_str: str) -> str:
         operators = "*.|"
         output = ""
         stack = []
         for char in regex_str:
-            if char in operators:
-                pass
+            if char not in operators:
+                # operand
+                output += char
+            else:
+                if (
+                    len(stack) == 0
+                    or InfixToPostfix.get_precedence(char)
+                    > InfixToPostfix.get_precedence(stack[0])
+                    or "(" in stack
+                ):
+                    # push this operator onto the stack
+                    stack.insert(0, char)
+                else:
+                    # pop operators from stack until we find one with a lower precedence (or an empy stack)
+                    while len(stack) != 0 and InfixToPostfix.get_precedence(
+                        char
+                    ) <= InfixToPostfix.get_precedence(stack[0]):
+                        output += stack.pop()
+                    # push this operator to the stack
+                    stack.insert(0, char)
+
+                if char == "(":
+                    # push to stack
+                    stack.insert(0, char)
+                elif char == ")":
+                    # pop from the stack until we find the matching parenthesis
+                    while stack[0] != "(":
+                        output += stack.pop()
+        # add remaining values on the stack
+        while len(stack) > 0:
+            output += stack.pop()
+
+        return output
 
 
 # class to validate regular expressions
@@ -75,7 +105,7 @@ class RegexValidator:
 
         return regex_str
 
-    def validate_and_modify_regex(regex_str: str) -> bool:
+    def validate_and_modify_regex(regex_str: str) -> tuple[bool, str]:
         """Validates a regular expression and modifies it for use with
         other functions.
 
@@ -83,21 +113,22 @@ class RegexValidator:
             regex_str (str): The regular expression string.
 
         Returns:
-            bool: True if the string is valid, False otherwise.
+            tuple[bool, str]: True if the string is valid, with the regex result string.
+            False otherwise, with None.
         """
         # check if the number of parentheses is consistent
         if regex_str.count("(") != regex_str.count(")"):
-            return False
+            return (False, None)
 
         # check that the regular expression only has accepted characters
-        accepted_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ()*"
+        accepted_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ()*|"
         for char in regex_str:
             if char not in accepted_chars:
-                return False
+                return (False, None)
 
         regex_str = RegexValidator.insert_alternation_operator(regex_str)
 
-        return True
+        return (True, regex_str)
 
 
 def main():
@@ -109,10 +140,14 @@ def main():
     regex_str = sys.argv[1]
 
     # validate regular expression
-    if not RegexValidator.validate_and_modify_regex(regex_str):
+    (is_valid, regex_str) = RegexValidator.validate_and_modify_regex(regex_str)
+    if not is_valid:
         # invalid regular expression
         print("{} is not a valid regular expression".format(regex_str))
         sys.exit(1)
+
+    regex_str = InfixToPostfix.infix_to_postfix(regex_str)
+    print("final output=", regex_str)
 
 
 if __name__ == "__main__":
