@@ -2,6 +2,12 @@
 import sys
 
 
+# class to represent an NFA
+class NFA:
+    pass
+
+
+# class to validate regular expressions
 class RegexValidator:
 
     def validate_regex(regex_str: str) -> bool:
