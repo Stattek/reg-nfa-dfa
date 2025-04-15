@@ -57,9 +57,14 @@ class InfixToPostfix:
         stack = []
         for char in regex_str:
             if char not in operators:
-                # operand
+                # if we have an operand
                 output += char
             else:
+                # if we have an operator
+
+                # if the stack is empty or the precedence of the current character
+                # is greater than that of the top of the stack or there is a
+                # parenthesis in the stack
                 if (
                     len(stack) == 0
                     or InfixToPostfix.get_precedence(char)
@@ -74,10 +79,12 @@ class InfixToPostfix:
                     while len(stack) != 0 and InfixToPostfix.get_precedence(
                         char
                     ) <= InfixToPostfix.get_precedence(stack[0]):
+                        # add popped values to output
                         output += stack.pop()
-                    # push this operator to the stack
+                    # now we can push this operator to the stack that
                     stack.insert(0, char)
 
+                # check for parentheses
                 if char == "(":
                     # push to stack
                     stack.insert(0, char)
