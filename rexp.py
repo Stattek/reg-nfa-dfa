@@ -32,6 +32,8 @@ class Regex:
 
 
 class InfixToPostfix:
+    """Contains methods to convert a regular expression from infix to postfix."""
+
     def get_precedence(operator):
         if operator == "*":
             return Operator.STAR_CLOSURE.value
@@ -41,6 +43,14 @@ class InfixToPostfix:
             return Operator.ALTERNATION.value
 
     def infix_to_postfix(regex_str: str) -> str:
+        """Converts the regular expression string to postfix from infix.
+
+        Args:
+            regex_str (str): The regular expression string.
+
+        Returns:
+            str: The output postfix string.
+        """
         operators = "*.|"
         output = ""
         stack = []
@@ -82,6 +92,8 @@ class InfixToPostfix:
 
 # class to validate regular expressions
 class RegexValidator:
+    """Contains methods to validate a regular expression."""
+
     def insert_alternation_operator(regex_str: str) -> str:
         """Inserts the alternation operator in a regular expression. For internal use.
         This is to make conversion to postfix easier.
