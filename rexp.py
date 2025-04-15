@@ -25,6 +25,7 @@ class RegexValidator:
 
         # remove empty parentheses
         regex_str = RegexValidator.__remove_empty_parentheses(regex_str)
+        regex_str = RegexValidator.__remove_single_variable_parentheses(regex_str)
 
         return True
 
