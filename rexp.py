@@ -27,14 +27,17 @@ class PostfixRegex:
             regex (str): The infix regular expression.
         """
         # represent a regular expression as a stack
-        self.postfix_regex = self.__infix_to_postfix(infix_regex)
+        self._postfix_regex = self.__infix_to_postfix(infix_regex)
 
-    def __parse_regex(regex: str):
-        # base case
-        if regex == "":
-            return
+    def generate_nfa(self) -> NFA:
+        """Evaluates and parses the regex into an NFA.
 
-    def __get_precedence(operator):
+        Returns:
+            NFA: The output NFA.
+        """
+        pass
+
+    def __get_precedence(self, operator):
         if operator == "*":
             return Operator.STAR_CLOSURE.value
         if operator == ".":
@@ -167,9 +170,9 @@ def main():
         print("{} is not a valid regular expression".format(regex_str))
         sys.exit(1)
 
-    regex_str = InfixToPostfix.infix_to_postfix(regex_str)
+    postfix_regex = PostfixRegex(regex_str)
     # DEBUG: remove the print below
-    print("final output=", regex_str)
+    print("final output=", postfix_regex._postfix_regex)
 
 
 if __name__ == "__main__":
