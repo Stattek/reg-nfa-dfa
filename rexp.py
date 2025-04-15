@@ -1,10 +1,53 @@
 #!/usr/bin/env python3
 import sys
+from enum import Enum
 
 
 # class to represent an NFA
 class NFA:
     pass
+
+
+class Operator(Enum):
+    """enum to represent an operator."""
+
+    ALTERNATION = 0
+    CONCATENATION = 1
+    STAR_CLOSURE = 2
+    UNKNOWN = 3
+
+
+class Regex:
+    def __init__(self, regex):
+        # represent a regular expression as a stack
+        self.regex_queue = self.create_regex_from_str(regex)
+
+    def __parse_regex(regex: str):
+        # base case
+        if regex == "":
+            return
+
+    def create_regex_from_str(regex: str) -> list:
+        output = []
+
+
+class InfixToPostfix:
+    def get_precedence(operator):
+        if operator == "*":
+            return Operator.STAR_CLOSURE
+        elif operator == ".":
+            return Operator.CONCATENATION
+        elif operator == "|":
+            return Operator.ALTERNATION
+        return Operator.UNKNOWN
+
+    def infix_to_postfix(regex_str: str):
+        operators = "*.|"
+        output = ""
+        stack = []
+        for char in regex_str:
+            if char in operators:
+                pass
 
 
 # class to validate regular expressions
