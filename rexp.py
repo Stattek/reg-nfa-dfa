@@ -9,6 +9,28 @@ class NFA:
 
 # class to validate regular expressions
 class RegexValidator:
+    def insert_alternation_operator(regex_str: str) -> str:
+        """Inserts the alternation operator in a regular expression. For internal use.
+        This is to make conversion to postfix easier.
+
+        Args:
+            regex_str (str): The input regular expression.
+
+        Returns:
+            str: The modified regular expression.
+        """
+        import re
+
+        pattern_str = r"(?<=[a-zA-Z])(?=[a-zA-Z])|(?<=\))(?=\()|(?<=[a-zA-Z])(?=\()|(?<=\))(?=[a-zA-Z])"
+        pattern = re.compile(pattern_str)
+
+        match = pattern.search(regex_str)
+        while match:
+            regex_str = regex_str[: match.start()] + "." + regex_str[match.end() :]
+            print(regex_str)
+            match = pattern.search(regex_str)
+
+        return regex_str
 
     def validate_regex(regex_str: str) -> bool:
         """Validates a regular expression.
@@ -23,52 +45,9 @@ class RegexValidator:
         if regex_str.count("(") != regex_str.count(")"):
             return False
 
-        # remove empty parentheses
-        regex_str = RegexValidator.__remove_empty_parentheses(regex_str)
-        regex_str = RegexValidator.__remove_single_variable_parentheses(regex_str)
+        regex_str = RegexValidator.insert_alternation_operator(regex_str)
 
         return True
-
-    def __remove_empty_parentheses(regex_str: str) -> str:
-        """Removes empty parentheses from a string
-
-        Args:
-            regex_str (str): The regular expression string.
-
-        Returns:
-        str: The modified string.
-        """
-        empty_parentheses = "()"
-        # iteratively remove all empty sets of parentheses
-        regex_idx = regex_str.find(empty_parentheses)
-        while regex_idx >= 0:
-            # remove this set of parentheses
-            regex_str = regex_str[:regex_idx] + regex_str[regex_idx + 2 :]
-            regex_idx = regex_str.find(empty_parentheses)
-
-        return regex_str
-
-    def __remove_single_variable_parentheses(regex_str: str) -> str:
-        """Removes parentheses around a single variable.
-
-        Args:
-            regex_str (str): The regular expression string.
-
-        Returns:
-            str: The modified string.
-        """
-        import re
-
-        pattern_str = r"\((.)\)"
-        pattern = re.compile(pattern_str)
-
-        match = pattern.search(regex_str)
-        while match:
-            regex_str = regex_str[: match.start()] + match[1] + regex_str[match.end() :]
-            print(regex_str)
-            match = pattern.search(regex_str)
-
-        return regex_str
 
 
 def main():
