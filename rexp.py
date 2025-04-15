@@ -17,24 +17,24 @@ class Operator(Enum):
     UNKNOWN = 3
 
 
-class Regex:
-    def __init__(self, regex):
+class PostfixRegex:
+    """Contains methods to convert a regular expression from infix to postfix and evaluate it."""
+
+    def __init__(self, infix_regex):
+        """Creates a PostfixRegex from a regular expression in infix.
+
+        Args:
+            regex (str): The infix regular expression.
+        """
         # represent a regular expression as a stack
-        self.regex_queue = self.create_regex_from_str(regex)
+        self.postfix_regex = self.__infix_to_postfix(infix_regex)
 
     def __parse_regex(regex: str):
         # base case
         if regex == "":
             return
 
-    def create_regex_from_str(regex: str) -> list:
-        output = []
-
-
-class InfixToPostfix:
-    """Contains methods to convert a regular expression from infix to postfix."""
-
-    def get_precedence(operator):
+    def __get_precedence(operator):
         if operator == "*":
             return Operator.STAR_CLOSURE.value
         if operator == ".":
@@ -43,7 +43,7 @@ class InfixToPostfix:
         # (the string shouldn't have any bad characters, since we already validated it)
         return Operator.ALTERNATION.value
 
-    def infix_to_postfix(regex_str: str) -> str:
+    def __infix_to_postfix(self, regex_str: str) -> str:
         """Converts the regular expression string to postfix from infix.
 
         Args:
@@ -67,8 +67,7 @@ class InfixToPostfix:
                 # parenthesis in the stack
                 if (
                     len(stack) == 0
-                    or InfixToPostfix.get_precedence(char)
-                    > InfixToPostfix.get_precedence(stack[0])
+                    or self.__get_precedence(char) > self.__get_precedence(stack[0])
                     or "(" in stack
                 ):
                     # push this operator onto the stack
@@ -76,9 +75,9 @@ class InfixToPostfix:
                 else:
                     # pop operators from stack until we find one
                     # with a lower precedence (or an empy stack)
-                    while len(stack) != 0 and InfixToPostfix.get_precedence(
+                    while len(stack) != 0 and self.__get_precedence(
                         char
-                    ) <= InfixToPostfix.get_precedence(stack[0]):
+                    ) <= self.__get_precedence(stack[0]):
                         # add popped values to output
                         output += stack.pop()
                     # now we can push this operator to the stack that
