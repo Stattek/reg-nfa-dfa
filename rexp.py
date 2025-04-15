@@ -75,8 +75,9 @@ class RegexValidator:
 
         return regex_str
 
-    def validate_regex(regex_str: str) -> bool:
-        """Validates a regular expression.
+    def validate_and_modify_regex(regex_str: str) -> bool:
+        """Validates a regular expression and modifies it for use with
+        other functions.
 
         Args:
             regex_str (str): The regular expression string.
@@ -108,7 +109,7 @@ def main():
     regex_str = sys.argv[1]
 
     # validate regular expression
-    if not RegexValidator.validate_regex(regex_str):
+    if not RegexValidator.validate_and_modify_regex(regex_str):
         # invalid regular expression
         print("{} is not a valid regular expression".format(regex_str))
         sys.exit(1)
