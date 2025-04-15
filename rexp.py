@@ -121,6 +121,7 @@ class RegexValidator:
         match = pattern.search(regex_str)
         while match:
             regex_str = regex_str[: match.start()] + "." + regex_str[match.end() :]
+            # DEBUG: remove the print below
             print(regex_str)
             match = pattern.search(regex_str)
 
@@ -168,6 +169,7 @@ def main():
         sys.exit(1)
 
     regex_str = InfixToPostfix.infix_to_postfix(regex_str)
+    # DEBUG: remove the print below
     print("final output=", regex_str)
 
 
