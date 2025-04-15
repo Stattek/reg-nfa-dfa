@@ -47,6 +47,28 @@ class RegexValidator:
 
         return regex_str
 
+    def __remove_single_variable_parentheses(regex_str: str) -> str:
+        """Removes parentheses around a single variable.
+
+        Args:
+            regex_str (str): The regular expression string.
+
+        Returns:
+            str: The modified string.
+        """
+        import re
+
+        pattern_str = r"\((.)\)"
+        pattern = re.compile(pattern_str)
+
+        match = pattern.search(regex_str)
+        while match:
+            regex_str = regex_str[: match.start()] + match[1] + regex_str[match.end() :]
+            print(regex_str)
+            match = pattern.search(regex_str)
+
+        return regex_str
+
 
 def main():
     # take arguments
