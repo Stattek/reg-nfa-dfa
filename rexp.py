@@ -88,6 +88,12 @@ class RegexValidator:
         if regex_str.count("(") != regex_str.count(")"):
             return False
 
+        # check that the regular expression only has accepted characters
+        accepted_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ()*"
+        for char in regex_str:
+            if char not in accepted_chars:
+                return False
+
         regex_str = RegexValidator.insert_alternation_operator(regex_str)
 
         return True
