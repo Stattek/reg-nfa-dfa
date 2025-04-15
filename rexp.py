@@ -37,10 +37,11 @@ class InfixToPostfix:
     def get_precedence(operator):
         if operator == "*":
             return Operator.STAR_CLOSURE.value
-        elif operator == ".":
+        if operator == ".":
             return Operator.CONCATENATION.value
-        else:
-            return Operator.ALTERNATION.value
+        # assume that we have alternation if nothing else matches
+        # (the string shouldn't have any bad characters, since we already validated it)
+        return Operator.ALTERNATION.value
 
     def infix_to_postfix(regex_str: str) -> str:
         """Converts the regular expression string to postfix from infix.
@@ -68,7 +69,8 @@ class InfixToPostfix:
                     # push this operator onto the stack
                     stack.insert(0, char)
                 else:
-                    # pop operators from stack until we find one with a lower precedence (or an empy stack)
+                    # pop operators from stack until we find one
+                    # with a lower precedence (or an empy stack)
                     while len(stack) != 0 and InfixToPostfix.get_precedence(
                         char
                     ) <= InfixToPostfix.get_precedence(stack[0]):
