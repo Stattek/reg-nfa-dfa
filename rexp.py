@@ -15,8 +15,8 @@ class Node:
 
     def __str__(self):
         output = ""
-        for key, value in self.transition_dict.items():
-            output += key + "->" + str(value) + "\n"
+        for key, value_list in self.transition_dict.items():
+            output += key + "->" + str(value_list)
         return output
 
 
@@ -32,7 +32,7 @@ class NFA:
     def __str__(self):
         output = ""
         for i, node in enumerate(self._nodes):
-            output += str(i + 1) + "  " + str(node)
+            output += str(i) + ":  " + str(node) + "\n"
         return output
 
     def create_single_char_nfa(char: chr):
@@ -155,12 +155,13 @@ class NFA:
     def __star_closure(self, operand):
         new_start = NFA()
         # we will have a lambda transition to the start of the operand
+        operand = self.__convert_to_nfa(operand)
+
         new_start._nodes = [Node({"": [operand._initial_state + 1]}, True)]
         new_start._initial_state = 0
         new_start._accepting_states = [0]
         new_start_inital_num_nodes = len(new_start._nodes)
 
-        operand = self.__convert_to_nfa(operand)
         operand = self.__displace_transition_dict(operand, new_start_inital_num_nodes)
 
         for accepting_state in operand._accepting_states:
@@ -332,7 +333,7 @@ class RegexValidator:
         """
         import re
 
-        pattern_str = r"(?<=[a-zA-Z])(?=[a-zA-Z])|(?<=\))(?=\()|(?<=[a-zA-Z])(?=\()|(?<=\))(?=[a-zA-Z])"
+        pattern_str = r"(?<=[a-zA-Z*)])(?=[a-zA-Z(])"
         pattern = re.compile(pattern_str)
 
         match = pattern.search(regex_str)
@@ -392,7 +393,7 @@ def main():
     nfa = NFA()
     nfa = nfa.evaluate_postfix_regex(postfix_regex.get_str())
 
-    print(nfa)
+    print("final\n", nfa, sep="")
 
 
 if __name__ == "__main__":
