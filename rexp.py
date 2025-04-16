@@ -35,7 +35,7 @@ class NFA:
         self._nodes = [Node({char: [1]}, False), Node({}, True)]
         self._initial_state = 0
         self._accepting_states = [1]
-        self._sigma = []
+        self._sigma = [char]
 
     def __convert_to_nfa(self, maybe_nfa):
         if isinstance(maybe_nfa, str):
