@@ -574,7 +574,7 @@ def main():
     nfa = nfa.evaluate_postfix_regex(postfix_regex.get_postfix_regex())
 
     if nfa != None:
-        print(regex_str, "is a valid regular expression")
+        print(regex_str, "is a valid regular expression\n")
         print(nfa)
     else:
         print(regex_str, "is not a valid regular expession")
