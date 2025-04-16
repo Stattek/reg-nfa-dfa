@@ -492,7 +492,8 @@ class DFA:
     #takes a NFA and converts it to a DFA
     def nfa_to_dfa(self, nfa: NFA):
         nfa_states = nfa._nodes 
-        initial = self.closure(nfa_states[0], "", nfa_states)
+        initial = [0]
+        initial.extend(self.closure(nfa_states[0], "", nfa_states))
         state_sets = [initial]
         state_outputs = {}
         index = 0
