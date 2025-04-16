@@ -356,9 +356,7 @@ class NFA:
                     except:
                         # error
                         return None
-                    print("evaluate alternation")
                     stack.append(self.__alternation(lhs, rhs))
-                    print(stack[len(stack) - 1])
                 elif symbol == Operator.symbol(Operator.CONCATENATION):
                     # concatenation
                     try:
@@ -367,9 +365,7 @@ class NFA:
                     except:
                         # error
                         return None
-                    print("evaluate concatenation")
                     stack.append(self.__concatenation(lhs, rhs))
-                    print(stack[len(stack) - 1])
                 elif symbol == Operator.symbol(Operator.STAR_CLOSURE):
                     # star closure
                     try:
@@ -377,9 +373,7 @@ class NFA:
                     except:
                         # error
                         return None
-                    print("evaluate star closure")
                     stack.append(self.__star_closure(lhs))
-                    print(stack[len(stack) - 1])
         # the final answer is the last element in the stack
         return self.__convert_to_nfa(stack.pop())
 
@@ -529,8 +523,6 @@ class RegexValidator:
         match = pattern.search(regex_str)
         while match:
             regex_str = regex_str[: match.start()] + "." + regex_str[match.end() :]
-            # DEBUG: remove the print below
-            print(regex_str)
             match = pattern.search(regex_str)
 
         return regex_str
@@ -577,8 +569,6 @@ def main():
         sys.exit(1)
 
     postfix_regex = PostfixRegex(regex_str)
-    # DEBUG: remove the print below
-    print("final output=", postfix_regex._postfix_regex)
 
     nfa = NFA()
     nfa = nfa.evaluate_postfix_regex(postfix_regex.get_postfix_regex())
