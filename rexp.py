@@ -468,7 +468,7 @@ class DFA:
 #
 
 #Minimises the DFA
-def minimize_dfa(self):
+def minimize_dfa():
     #Minimize the dfa
     pass
 
@@ -504,10 +504,13 @@ def main():
 
     print("final\n", nfa, sep="")
     
+    #Part B
     dfa = DFA()
     dfa.nfa_to_dfa(nfa)
     print(dfa.dfa_to_string)
-
+    
+    #Part C
+    minimize_dfa()
 
 if __name__ == "__main__":
     main()
