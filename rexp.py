@@ -41,12 +41,40 @@ class NFA:
             # assume this is already an NFA
             return maybe_nfa
 
+    def __displace_transition_dict(self, nfa, amount):
+        new_nfa = NFA()
+        new_nfa._initial_state = nfa._initial_state
+        new_nfa._accepting_states = nfa._accepting_states
+        new_nfa._sigma = nfa._sigma
+
+        nodes = []
+        for node in nfa._nodes:
+            print(node)
+
+            # make a copy of this node
+            new_node_is_accepting = node.is_accepting
+            new_node_transition_dict = {}
+
+            for transition, values in node.transition_dict.items():
+                new_node_transition_dict[transition] = [
+                    value + amount for value in values
+                ]
+                print(transition, values)
+                print("new_node", new_node_transition_dict)
+
+            new_node = Node(new_node_transition_dict, new_node_is_accepting)
+            nodes.append(new_node)
+
+        new_nfa._nodes = nodes
+        return new_nfa
+
     def __alternation(self, lhs, rhs):
 
         lhs = self.__convert_to_nfa(lhs)
         rhs = self.__convert_to_nfa(rhs)
 
-        new_start = self.__create_empty_nfa()
+        # setup the new start NFA
+        new_start = NFA()
         # we will have lambda transitions to the start of the lhs and rhs
         new_start._nodes = [
             Node(
@@ -62,23 +90,34 @@ class NFA:
         new_start._initial_state = 0
         new_start._accepting_states = []
 
+        # save the initial nodes for later
+        new_start_inital_num_nodes = len(new_start._nodes)
+
+        # setup lhs and rhs
         lhs = self.__convert_to_nfa(lhs)
         rhs = self.__convert_to_nfa(rhs)
+        lhs = self.__displace_transition_dict(lhs, new_start_inital_num_nodes)
+        rhs = self.__displace_transition_dict(
+            rhs, len(lhs._nodes) + new_start_inital_num_nodes
+        )
 
         # add the nodes and accepting states nodes
         new_start._nodes.extend(lhs._nodes)
         new_start._nodes.extend(rhs._nodes)
         for val in lhs._accepting_states:
-            val += len(new_start._nodes)
+            val += new_start_inital_num_nodes
             new_start._accepting_states.append(val)
         for val in rhs._accepting_states:
-            val += len(new_start._nodes)
+            val += len(lhs._nodes) + new_start_inital_num_nodes
             new_start._accepting_states.append(val)
+        return lhs
 
     def __concatenation(self, lhs, rhs):
         lhs = self.__convert_to_nfa(lhs)
         rhs = self.__convert_to_nfa(rhs)
+        lhs_inital_num_nodes = len(lhs._nodes)
 
+        rhs = self.__displace_transition_dict(rhs, lhs_inital_num_nodes)
         for accepting_state in lhs._accepting_states:
             lhs._nodes[accepting_state].is_accepting = False
             # set the transition to the initial state of rhs (should always be 0)
@@ -96,19 +135,23 @@ class NFA:
                 ]
 
         # add the nodes and accepting states nodes
+        lhs._accepting_states = []  # since we turned all accepting states false
         lhs._nodes.extend(rhs._nodes)
         for val in rhs._accepting_states:
-            val += len(lhs._nodes)
+            val += lhs_inital_num_nodes
             lhs._accepting_states.append(val)
+        return lhs
 
     def __star_closure(self, operand):
-        new_start = self.__create_empty_nfa()
+        new_start = NFA()
         # we will have a lambda transition to the start of the operand
         new_start._nodes = [Node({"": [operand._initial_state + 1]}, True)]
         new_start._initial_state = 0
         new_start._accepting_states = [0]
+        new_start_inital_num_nodes = len(new_start._nodes)
 
         operand = self.__convert_to_nfa(operand)
+        operand = self.__displace_transition_dict(operand, new_start_inital_num_nodes)
 
         for accepting_state in operand._accepting_states:
             # set the transition to the initial state of new_start (should always be 0)
@@ -125,10 +168,11 @@ class NFA:
                     new_start._initial_state
                 ]
 
-        operand._nodes.extend(operand._nodes)
+        new_start._nodes.extend(operand._nodes)
         for val in operand._accepting_states:
-            val += len(operand._nodes)
-            operand._accepting_states.append(val)
+            val += new_start_inital_num_nodes
+            new_start._accepting_states.append(val)
+        return new_start
 
     def evaluate_postfix_regex(self, regex):
         stack = []
@@ -148,7 +192,7 @@ class NFA:
                 elif symbol == Operator.symbol(Operator.CONCATENATION):
                     rhs = stack.pop()
                     lhs = stack.pop()
-                    print("evaluate concatenation")
+                    print("evaluate concatenation", lhs, rhs)
                     stack.append(self.__concatenation(lhs, rhs))
                 elif symbol == Operator.symbol(Operator.STAR_CLOSURE):
                     lhs = stack.pop()
