@@ -7,13 +7,29 @@ PARENTHESES = "()"
 
 
 class Node:
+    """Represents a Node in an NFA/DFA."""
+
     def __init__(self, transition_dict, is_accepting):
+        """Create a new Node.
+
+        Args:
+            transition_dict (dict): Dictionary for transitions from this Node.
+            is_accepting (bool): If this Node is accepting.
+        """
         # keeps track of the alphabet (key) and holds a value
         # which is a list of indices to other nodes in the graph
         self.transition_dict = transition_dict
         self.is_accepting = is_accepting
 
     def to_str(self, sigma):
+        """Converts this Node to string.
+
+        Args:
+            sigma (list): The alphabet for the NFA/DFA this Node belongs to.
+
+        Returns:
+            str: The string representation of this Node.
+        """
         output = ""
 
         sigma.append("")
@@ -42,14 +58,21 @@ class Node:
 
 # class to represent an NFA
 class NFA:
+    """Represents an NFA. Able to create an NFA from regular expressions."""
 
     def __init__(self):
+        """Creates a new empty NFA."""
         self._nodes = []
         self._initial_state = None
         self._accepting_states = []
         self._sigma = []
 
     def __str__(self):
+        """Converts this NFA to string.
+
+        Returns:
+            str: The string representation of the NFA.
+        """
         output = "NFA:\n"
         output += "Sigma: "
         for i, val in enumerate(self._sigma):
@@ -75,6 +98,15 @@ class NFA:
         return output
 
     def __combine_sigma(self, lhs, rhs):
+        """Combines the sigmas of two NFAs.
+
+        Args:
+            lhs (NFA): First NFA to combine.
+            rhs (NFA): Second NFA to combine.
+
+        Returns:
+            list: The new sigma from combining unique values of the lhs and rhs.
+        """
         output = []
         for value in lhs:
             if value not in output:
@@ -85,6 +117,14 @@ class NFA:
         return output
 
     def create_single_char_nfa(char: chr):
+        """Creates an NFA to accept a single character.
+
+        Args:
+            char (chr): The character to accept.
+
+        Returns:
+            NFA: The NFA to accept a single character.
+        """
         # simplest NFA is just an initial (nonaccepting) state
         # that transitions on the character to an accepting state
         nfa = NFA()
@@ -95,6 +135,16 @@ class NFA:
         return nfa
 
     def __convert_to_nfa(self, maybe_nfa):
+        """Converts the input parameter to an NFA.
+
+        Args:
+            maybe_nfa (NFA or str): Can either be an NFA to then\
+            return, or a single character string to convert to NFA.
+
+        Returns:
+            NFA: The NFA if the value was already an NFA\
+            or a newly created NFA from the input string.
+        """
         if isinstance(maybe_nfa, str):
             # create an NFA out of this symbol
             return NFA.create_single_char_nfa(maybe_nfa)
@@ -103,6 +153,15 @@ class NFA:
             return maybe_nfa
 
     def __displace_transition_dict(self, nfa, amount):
+        """Displaces a transition dictionary of an NFA by a fixed value.
+
+        Args:
+            nfa (NFA): The NFA to displace the transition dictionary of.
+            amount (int): The amount to displace the transition dictionary by.
+
+        Returns:
+            NFA: The NFA with its transition indices displaced by the specified amount.
+        """
         new_nfa = NFA()
         new_nfa._initial_state = nfa._initial_state
         new_nfa._accepting_states = nfa._accepting_states
@@ -126,7 +185,15 @@ class NFA:
         return new_nfa
 
     def __alternation(self, lhs, rhs):
+        """Performs alternation on the two NFAs.
 
+        Args:
+            lhs (NFA): The left-hand side NFA.
+            rhs (NFA): The right-hand side NFA.
+
+        Returns:
+            NFA: The result of alternation.
+        """
         lhs = self.__convert_to_nfa(lhs)
         rhs = self.__convert_to_nfa(rhs)
 
@@ -175,6 +242,15 @@ class NFA:
         return new_start
 
     def __concatenation(self, lhs, rhs):
+        """Performs concatenation on the two NFAs.
+
+        Args:
+            lhs (NFA): The left-hand side NFA.
+            rhs (NFA): The right-hand side NFA.
+
+        Returns:
+            NFA: The result of concatenation.
+        """
         lhs = self.__convert_to_nfa(lhs)
         rhs = self.__convert_to_nfa(rhs)
         lhs_inital_num_nodes = len(lhs._nodes)
@@ -209,6 +285,14 @@ class NFA:
         return lhs
 
     def __star_closure(self, operand):
+        """Performs star closure on the two NFAs.
+
+        Args:
+            operand (NFA): The NFA to perform star closure on.
+
+        Returns:
+            NFA: The result of star closure.
+        """
         new_start = NFA()
         # we will have a lambda transition to the start of the operand
         operand = self.__convert_to_nfa(operand)
@@ -246,6 +330,14 @@ class NFA:
         return new_start
 
     def evaluate_postfix_regex(self, regex):
+        """Evaluates the postfix regex and creates an NFA from it.
+
+        Args:
+            regex (str): The postfix regular expression.
+
+        Returns:
+            NFA: The resulting NFA from evaluating the postfix regular expression.
+        """
         stack = []
         for symbol in regex:
             if symbol not in OPERATORS:
@@ -254,26 +346,36 @@ class NFA:
             else:
                 # we have an operator
                 if symbol == Operator.symbol(Operator.ALTERNATION):
+                    # alternation
+
                     # since we are popping off the stack, we get
                     # rhs then lhs, since it is backwards
-                    rhs = stack.pop()
-                    lhs = stack.pop()
-                    print("evaluate alternation")
+                    try:
+                        rhs = stack.pop()
+                        lhs = stack.pop()
+                    except:
+                        # error
+                        return None
                     stack.append(self.__alternation(lhs, rhs))
-                    print(stack[len(stack) - 1])
                 elif symbol == Operator.symbol(Operator.CONCATENATION):
-                    rhs = stack.pop()
-                    lhs = stack.pop()
-                    print("evaluate concatenation")
+                    # concatenation
+                    try:
+                        rhs = stack.pop()
+                        lhs = stack.pop()
+                    except:
+                        # error
+                        return None
                     stack.append(self.__concatenation(lhs, rhs))
-                    print(stack[len(stack) - 1])
                 elif symbol == Operator.symbol(Operator.STAR_CLOSURE):
-                    lhs = stack.pop()
-                    print("evaluate star closure")
+                    # star closure
+                    try:
+                        lhs = stack.pop()
+                    except:
+                        # error
+                        return None
                     stack.append(self.__star_closure(lhs))
-                    print(stack[len(stack) - 1])
         # the final answer is the last element in the stack
-        return stack[0]
+        return self.__convert_to_nfa(stack.pop())
 
 
 class Operator(Enum):
@@ -286,6 +388,14 @@ class Operator(Enum):
     STAR_CLOSURE = (2, 1, "*")
 
     def symbol(operator):
+        """Gets the symbol value for this operator.
+
+        Args:
+            operator (Operator): The operator.
+
+        Returns:
+            str: The operator.
+        """
         return operator.value[2]
 
 
@@ -301,7 +411,12 @@ class PostfixRegex:
         # represent a regular expression as a stack
         self._postfix_regex = self.__infix_to_postfix(infix_regex)
 
-    def get_str(self):
+    def get_postfix_regex(self):
+        """Gets postfix regular expression instance variable.
+
+        Returns:
+            str: The postfix regular expression string.
+        """
         return self._postfix_regex
 
     def generate_nfa(self) -> NFA:
@@ -313,6 +428,14 @@ class PostfixRegex:
         pass
 
     def __get_precedence(self, operator):
+        """Gets the precedence of this operator.
+
+        Args:
+            operator (str): The operator symbol.
+
+        Returns:
+            int: The operator precedence integer value or None if the operator could not be found.
+        """
         if operator == Operator.symbol(Operator.STAR_CLOSURE):
             # since we want the star closure's precedence value
             return Operator.STAR_CLOSURE.value[0]
@@ -320,9 +443,7 @@ class PostfixRegex:
             return Operator.CONCATENATION.value[0]
         elif operator == Operator.symbol(Operator.ALTERNATION):
             return Operator.ALTERNATION.value[0]
-        return (
-            None  # bad value, it should always have a lower precedence than everything
-        )
+        return None  # bad value
 
     def __infix_to_postfix(self, regex_str: str) -> str:
         """Converts the regular expression string to postfix from infix.
@@ -402,8 +523,6 @@ class RegexValidator:
         match = pattern.search(regex_str)
         while match:
             regex_str = regex_str[: match.start()] + "." + regex_str[match.end() :]
-            # DEBUG: remove the print below
-            print(regex_str)
             match = pattern.search(regex_str)
 
         return regex_str
@@ -562,13 +681,16 @@ def main():
         sys.exit(1)
 
     postfix_regex = PostfixRegex(regex_str)
-    # DEBUG: remove the print below
-    print("final output=", postfix_regex._postfix_regex)
 
     nfa = NFA()
-    nfa = nfa.evaluate_postfix_regex(postfix_regex.get_str())
+    nfa = nfa.evaluate_postfix_regex(postfix_regex.get_postfix_regex())
 
-    print("final\n", nfa, sep="")
+    if nfa != None:
+        print(regex_str, "is a valid regular expression\n")
+        print(nfa)
+    else:
+        print(regex_str, "is not a valid regular expession")
+        sys.exit(1)  # terminate program, this is not valid
     
     #Part B
     dfa = DFA()
