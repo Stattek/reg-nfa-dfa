@@ -30,7 +30,7 @@ class NFA:
         # simplest NFA is just an initial (nonaccepting) state
         # that transitions on the character to an accepting state
         self.__create_empty_nfa()
-        self._nodes = [Node({char: 1}, False), Node({}, True)]
+        self._nodes = [Node({char: [1]}, False), Node({}, True)]
         self._initial_state = 0
         self._accepting_states = [1]
 
@@ -131,7 +131,7 @@ class NFA:
             val += len(operand._nodes)
             operand._accepting_states.append(val)
 
-    def evaluate_postfix_regex(self, regex: str):
+    def evaluate_postfix_regex(regex: str):
         stack = []
         for symbol in regex:
             if symbol not in OPERATORS:
@@ -325,6 +325,8 @@ def main():
     postfix_regex = PostfixRegex(regex_str)
     # DEBUG: remove the print below
     print("final output=", postfix_regex._postfix_regex)
+
+    NFA.evaluate_postfix_regex()
 
     lhs = {"a": [1, 2, 3]}
 
