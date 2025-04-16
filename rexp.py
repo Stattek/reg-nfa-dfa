@@ -404,14 +404,14 @@ class DFA:
         self.initial = []
         self.sigma = []
 
-    def dfa_to_string(self, sigma):
+    def __str__(self):
         result = "DFA:\n"
-        result += "Sigma: " + " ".join(sigma) + "\n"
+        result += "Sigma: " + " ".join(self.sigma) + "\n"
         result += "------------------\n"
         
         # Add transitions for each state
         for index, state in enumerate(self.state_list):
-            transitions = " ".join(str(state.transition_dict.get(symbol, "-")) for symbol in sigma)
+            transitions = " ".join(str(state.transition_dict.get(symbol, "-")) for symbol in self.sigma)
             result += f"{index}: {transitions}\n"
         
         result += "------------------\n"
@@ -427,24 +427,26 @@ class DFA:
         return result
     
     # gets the closure for a state
-    def closure(self, state: Node, input: str,nfa_states , visited=None) -> list:
+    def closure(self, state: Node, input: str,nfa_states: list , visited=None) -> list:
         if visited is None:
             visited = set()
         if state in visited:
             return []
         visited.add(state)
-        closure_list = state.transition_dict.get(input, [])
+        closure_list: list = state.transition_dict.get(input, [])
         for next_state in closure_list:
-            closure_list.extend(self.closure(nfa_states[next_state], "", visited))
+            closure_list.extend(self.closure(nfa_states[next_state], "",nfa_states, visited))
         return closure_list
 
     #checks if a closure is in a list of closures (this is for nfa to dfa)
-    def closure_in_list(closure_set, closure) -> int:
+    def closure_in_list(self, closure_set: list, closure) -> int:
         for i, existing_closure in enumerate(closure_set):
             if set(existing_closure) == set(closure):
                 return i
         return -1
-
+    #
+    # TODO: LAMBDA TRANSITITON INCLUDES SELF MAYBE
+    #
     #takes a NFA and converts it to a DFA
     def nfa_to_dfa(self, nfa: NFA):
         nfa_states = nfa._nodes 
@@ -458,7 +460,7 @@ class DFA:
             temp_transitions = {symbol: [] for symbol in alphabet}
             for state in state_sets[index]:
                 for symbol in alphabet:
-                    temp_transitions[symbol].extend(self.closure(state, symbol, nfa_states))
+                    temp_transitions[symbol].extend(self.closure(nfa_states[state], symbol, nfa_states))
             state_outputs[index] = {}
             for symbol in alphabet:
                 temp_closure = temp_transitions[symbol]
@@ -473,10 +475,10 @@ class DFA:
         self.sigma = alphabet
         index = 0
         for state_set in state_sets:
-            accepting = any(state.is_accepting for state in state_set)
-            temp_node = Node(state_outputs[index],accepting)
+            accept = any(nfa_states[state].is_accepting for state in state_set)
+            temp_node = Node(state_outputs[index],accept)
             self.state_list.append(temp_node)
-            if accepting:
+            if accept:
                 self.accepting.append(temp_node)
             index += 1
 
@@ -528,7 +530,7 @@ def main():
     #Part B
     dfa = DFA()
     dfa.nfa_to_dfa(nfa)
-    print(dfa.dfa_to_string)
+    print(dfa)
     
     #Part C
     minimize_dfa()
