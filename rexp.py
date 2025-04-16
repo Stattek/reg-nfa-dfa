@@ -2,19 +2,68 @@
 import sys
 from enum import Enum
 
+OPERATORS = "*.|"
+
+
+class Node:
+    def __init__(self):
+        # keeps track of the alphabet (key) and holds a value
+        # which is a list of indices to other nodes in the graph
+        self._transition_dict = {}
+
 
 # class to represent an NFA
 class NFA:
-    pass
+    def __init__(self, regex_str: str):
+        self._nfa = self.__evaluate_postfix_regex(regex_str)
+        self._initial_state = None
+        self._accepting_states = []
+
+    def __convert_to_nfa(self, nfa):
+        pass
+
+    def __alternation(self, first_nfa, second_nfa):
+        pass
+
+    def __concatenation(self, first_nfa, second_nfa):
+        pass
+
+    def __star_closure(self, nfa):
+        pass
+
+    def __evaluate_postfix_regex(self, regex: str):
+        stack = []
+        for symbol in regex:
+            if symbol not in OPERATORS:
+                # we have an operand
+                stack.insert(0, symbol)
+            else:
+                # we have an operator
+                if symbol == Operator.ALTERNATION:
+                    # since we are popping off the stack, we get
+                    # rhs then lhs, since it is backwards
+                    rhs = stack.pop()
+                    lhs = stack.pop()
+                    stack.insert(0, self.__alternation(lhs, rhs))
+                elif symbol == Operator.CONCATENATION:
+                    rhs = stack.pop()
+                    lhs = stack.pop()
+                    stack.insert(0, self.__concatenation(lhs, rhs))
+                elif symbol == Operator.STAR_CLOSURE:
+                    lhs = stack.pop()
+                    stack.insert(0, self.__star_closure(lhs))
+        # the final answer is the last element in the stack
+        
 
 
 class Operator(Enum):
-    """enum to represent an operator."""
+    """Enum to represent an operator. Holds the precedence value and
+    the number of operands for the operator."""
 
-    ALTERNATION = 0
-    CONCATENATION = 1
-    STAR_CLOSURE = 2
-    UNKNOWN = 3
+    # keep track of (precedence value, number of operands)
+    ALTERNATION = (0, 2)
+    CONCATENATION = (1, 2)
+    STAR_CLOSURE = (2, 1)
 
 
 class PostfixRegex:
@@ -39,12 +88,13 @@ class PostfixRegex:
 
     def __get_precedence(self, operator):
         if operator == "*":
-            return Operator.STAR_CLOSURE.value
+            # since we want the star closure's precedence value
+            return Operator.STAR_CLOSURE.value[0]
         if operator == ".":
-            return Operator.CONCATENATION.value
+            return Operator.CONCATENATION.value[0]
         # assume that we have alternation if nothing else matches
         # (the string shouldn't have any bad characters, since we already validated it)
-        return Operator.ALTERNATION.value
+        return Operator.ALTERNATION.value[0]
 
     def __infix_to_postfix(self, regex_str: str) -> str:
         """Converts the regular expression string to postfix from infix.
@@ -55,11 +105,10 @@ class PostfixRegex:
         Returns:
             str: The output postfix string.
         """
-        operators = "*.|"
         output = ""
         stack = []
         for char in regex_str:
-            if char not in operators:
+            if char not in OPERATORS:
                 # if we have an operand
                 output += char
             else:
