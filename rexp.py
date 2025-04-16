@@ -13,10 +13,30 @@ class Node:
         self.transition_dict = transition_dict
         self.is_accepting = is_accepting
 
-    def __str__(self):
+    def to_str(self, sigma):
         output = ""
-        for key, value_list in self.transition_dict.items():
-            output += key + "->" + str(value_list)
+
+        sigma.append("")
+        for i, key in enumerate(sigma):
+            if key == "":
+                output += '""'
+            else:
+                output += key
+            output += "-> {"
+
+            try:
+                for i, value in enumerate(self.transition_dict[key]):
+                    output += str(value)
+                    if i != len(self.transition_dict[key]) - 1:
+                        output += ", "
+            except:
+                # don't print anything if there is an error
+                pass
+            output += "}"
+            if i != len(sigma) - 1:
+                output += " "
+        sigma.pop()  # remove the empty string we added earlier
+
         return output
 
 
@@ -30,9 +50,17 @@ class NFA:
         self._sigma = []
 
     def __str__(self):
-        output = ""
+        output = "NFA:\n"
+        output += "Sigma: "
+        for i, val in enumerate(self._sigma):
+            output += str(val)
+            if i != len(self._sigma) - 1:
+                output += " "
+        output += "\n"
+
+        str(self._sigma) + "\n"
         for i, node in enumerate(self._nodes):
-            output += str(i) + ":  " + str(node) + "\n"
+            output += str(i) + ": " + node.to_str(self._sigma) + "\n"
         return output
 
     def __combine_sigma(self, lhs, rhs):
@@ -221,15 +249,18 @@ class NFA:
                     lhs = stack.pop()
                     print("evaluate alternation")
                     stack.append(self.__alternation(lhs, rhs))
+                    print(stack[len(stack) - 1])
                 elif symbol == Operator.symbol(Operator.CONCATENATION):
                     rhs = stack.pop()
                     lhs = stack.pop()
-                    print("evaluate concatenation", lhs, rhs)
+                    print("evaluate concatenation")
                     stack.append(self.__concatenation(lhs, rhs))
+                    print(stack[len(stack) - 1])
                 elif symbol == Operator.symbol(Operator.STAR_CLOSURE):
                     lhs = stack.pop()
                     print("evaluate star closure")
                     stack.append(self.__star_closure(lhs))
+                    print(stack[len(stack) - 1])
         # the final answer is the last element in the stack
         return stack[0]
 
