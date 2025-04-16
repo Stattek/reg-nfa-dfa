@@ -3,6 +3,7 @@ import sys
 from enum import Enum
 
 OPERATORS = "*.|"
+PARENTHESES = "()"
 
 
 class Node:
@@ -16,31 +17,26 @@ class Node:
 # class to represent an NFA
 class NFA:
 
-    def __init__(self, regex_str: str):
-        self._nodes = self.__evaluate_postfix_regex(regex_str)
-        self._initial_state = None
-        self._accepting_states = []
-        self._sigma = []
-
-    def __create_empty_nfa(self):
+    def __init__(self):
         self._nodes = []
         self._initial_state = None
         self._accepting_states = []
         self._sigma = []
 
-    def __create_single_char_nfa(self, char: chr):
+    def create_single_char_nfa(char: chr):
         # simplest NFA is just an initial (nonaccepting) state
         # that transitions on the character to an accepting state
-        self.__create_empty_nfa()
-        self._nodes = [Node({char: [1]}, False), Node({}, True)]
-        self._initial_state = 0
-        self._accepting_states = [1]
-        self._sigma = [char]
+        nfa = NFA()
+        nfa._nodes = [Node({char: [1]}, False), Node({}, True)]
+        nfa._initial_state = 0
+        nfa._accepting_states = [1]
+        nfa._sigma = [char]
+        return nfa
 
     def __convert_to_nfa(self, maybe_nfa):
         if isinstance(maybe_nfa, str):
             # create an NFA out of this symbol
-            return self.__create_single_char_nfa(maybe_nfa)
+            return NFA.create_single_char_nfa(maybe_nfa)
         else:
             # assume this is already an NFA
             return maybe_nfa
@@ -134,42 +130,45 @@ class NFA:
             val += len(operand._nodes)
             operand._accepting_states.append(val)
 
-    def evaluate_postfix_regex(regex: str):
+    def evaluate_postfix_regex(self, regex):
         stack = []
         for symbol in regex:
             if symbol not in OPERATORS:
                 # we have an operand
-                stack.insert(0, symbol)
+                stack.append(symbol)
             else:
                 # we have an operator
-                if symbol == Operator.ALTERNATION:
+                if symbol == Operator.symbol(Operator.ALTERNATION):
                     # since we are popping off the stack, we get
                     # rhs then lhs, since it is backwards
                     rhs = stack.pop()
                     lhs = stack.pop()
                     print("evaluate alternation")
-                    stack.insert(0, self.__alternation(lhs, rhs))
-                elif symbol == Operator.CONCATENATION:
+                    stack.append(self.__alternation(lhs, rhs))
+                elif symbol == Operator.symbol(Operator.CONCATENATION):
                     rhs = stack.pop()
                     lhs = stack.pop()
                     print("evaluate concatenation")
-                    stack.insert(0, self.__concatenation(lhs, rhs))
-                elif symbol == Operator.STAR_CLOSURE:
+                    stack.append(self.__concatenation(lhs, rhs))
+                elif symbol == Operator.symbol(Operator.STAR_CLOSURE):
                     lhs = stack.pop()
                     print("evaluate star closure")
-                    stack.insert(0, self.__star_closure(lhs))
+                    stack.append(self.__star_closure(lhs))
         # the final answer is the last element in the stack
         return stack[0]
 
 
 class Operator(Enum):
-    """Enum to represent an operator. Holds the precedence value and
-    the number of operands for the operator."""
+    """Enum to represent an operator. Holds the precedence value,
+    the number of operands for the operator, and the symbol."""
 
-    # keep track of (precedence value, number of operands)
-    ALTERNATION = (0, 2)
-    CONCATENATION = (1, 2)
-    STAR_CLOSURE = (2, 1)
+    # keep track of (precedence value, number of operands, symbol)
+    ALTERNATION = (0, 2, "|")
+    CONCATENATION = (1, 2, ".")
+    STAR_CLOSURE = (2, 1, "*")
+
+    def symbol(operator):
+        return operator.value[2]
 
 
 class PostfixRegex:
@@ -184,6 +183,9 @@ class PostfixRegex:
         # represent a regular expression as a stack
         self._postfix_regex = self.__infix_to_postfix(infix_regex)
 
+    def get_str(self):
+        return self._postfix_regex
+
     def generate_nfa(self) -> NFA:
         """Evaluates and parses the regex into an NFA.
 
@@ -193,14 +195,16 @@ class PostfixRegex:
         pass
 
     def __get_precedence(self, operator):
-        if operator == "*":
+        if operator == Operator.symbol(Operator.STAR_CLOSURE):
             # since we want the star closure's precedence value
             return Operator.STAR_CLOSURE.value[0]
-        if operator == ".":
+        elif operator == Operator.symbol(Operator.CONCATENATION):
             return Operator.CONCATENATION.value[0]
-        # assume that we have alternation if nothing else matches
-        # (the string shouldn't have any bad characters, since we already validated it)
-        return Operator.ALTERNATION.value[0]
+        elif operator == Operator.symbol(Operator.ALTERNATION):
+            return Operator.ALTERNATION.value[0]
+        return (
+            None  # bad value, it should always have a lower precedence than everything
+        )
 
     def __infix_to_postfix(self, regex_str: str) -> str:
         """Converts the regular expression string to postfix from infix.
@@ -214,9 +218,18 @@ class PostfixRegex:
         output = ""
         stack = []
         for char in regex_str:
-            if char not in OPERATORS:
+            if char not in OPERATORS and char not in PARENTHESES:
                 # if we have an operand
                 output += char
+            # check for parentheses
+            elif char == "(":
+                # push to stack
+                stack.append(char)
+            elif char == ")":
+                # pop from the stack until we find the matching parenthesis
+                while stack[len(stack) - 1] != "(":
+                    output += stack.pop()
+                stack.pop()  # remove the final parenthesis
             else:
                 # if we have an operator
 
@@ -225,30 +238,23 @@ class PostfixRegex:
                 # parenthesis in the stack
                 if (
                     len(stack) == 0
-                    or self.__get_precedence(char) > self.__get_precedence(stack[0])
                     or "(" in stack
+                    or self.__get_precedence(char)
+                    > self.__get_precedence(stack[len(stack) - 1])
                 ):
                     # push this operator onto the stack
-                    stack.insert(0, char)
+                    stack.append(char)
                 else:
                     # pop operators from stack until we find one
                     # with a lower precedence (or an empy stack)
                     while len(stack) != 0 and self.__get_precedence(
                         char
-                    ) <= self.__get_precedence(stack[0]):
+                    ) <= self.__get_precedence(stack[len(stack) - 1]):
                         # add popped values to output
                         output += stack.pop()
                     # now we can push this operator to the stack that
-                    stack.insert(0, char)
+                    stack.append(char)
 
-                # check for parentheses
-                if char == "(":
-                    # push to stack
-                    stack.insert(0, char)
-                elif char == ")":
-                    # pop from the stack until we find the matching parenthesis
-                    while stack[0] != "(":
-                        output += stack.pop()
         # add remaining values on the stack
         while len(stack) > 0:
             output += stack.pop()
@@ -329,7 +335,8 @@ def main():
     # DEBUG: remove the print below
     print("final output=", postfix_regex._postfix_regex)
 
-    NFA.evaluate_postfix_regex()
+    nfa = NFA()
+    nfa = nfa.evaluate_postfix_regex(postfix_regex.get_str())
 
     lhs = {"a": [1, 2, 3]}
 
