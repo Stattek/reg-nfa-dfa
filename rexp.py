@@ -66,22 +66,6 @@ class NFA:
         lhs = self.__convert_to_nfa(lhs)
         rhs = self.__convert_to_nfa(rhs)
 
-        for accepting_state in lhs._accepting_states:
-            lhs._nodes[accepting_state].is_accepting = False
-            # set the transition to the initial state of rhs (should always be 0)
-            # also, since we are going to append the node "lists," we add the
-            # length of the nodes list to the initial state index
-            try:
-                # try appending
-                lhs._nodes[accepting_state].transition_dict[""].append(
-                    len(lhs._nodes) + rhs._initial_state
-                )
-            except KeyError:
-                # create a new list on error
-                lhs._nodes[accepting_state].transition_dict[""] = [
-                    len(lhs._nodes) + rhs._initial_state
-                ]
-
         # add the nodes and accepting states nodes
         new_start._nodes.extend(lhs._nodes)
         new_start._nodes.extend(rhs._nodes)
