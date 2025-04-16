@@ -20,11 +20,13 @@ class NFA:
         self._nodes = self.__evaluate_postfix_regex(regex_str)
         self._initial_state = None
         self._accepting_states = []
+        self._sigma = []
 
     def __create_empty_nfa(self):
         self._nodes = []
         self._initial_state = None
         self._accepting_states = []
+        self._sigma = []
 
     def __create_single_char_nfa(self, char: chr):
         # simplest NFA is just an initial (nonaccepting) state
@@ -33,6 +35,7 @@ class NFA:
         self._nodes = [Node({char: [1]}, False), Node({}, True)]
         self._initial_state = 0
         self._accepting_states = [1]
+        self._sigma = []
 
     def __convert_to_nfa(self, maybe_nfa):
         if isinstance(maybe_nfa, str):
