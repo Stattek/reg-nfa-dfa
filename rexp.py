@@ -57,10 +57,18 @@ class NFA:
             if i != len(self._sigma) - 1:
                 output += " "
         output += "\n"
+        output += "------\n"
 
         str(self._sigma) + "\n"
         for i, node in enumerate(self._nodes):
             output += str(i) + ": " + node.to_str(self._sigma) + "\n"
+        output += "------\n"
+        output += str(self._initial_state) + ": Initial State\n"
+        for i, value in enumerate(self._accepting_states):
+            output += str(value)
+            if i != len(self._accepting_states) - 1:
+                output += ","
+        output += ": Accepting State(s)"
         return output
 
     def __combine_sigma(self, lhs, rhs):
