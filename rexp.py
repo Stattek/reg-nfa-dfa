@@ -60,10 +60,13 @@ class NFA:
         output += "------\n"
 
         str(self._sigma) + "\n"
+        # print nodes
         for i, node in enumerate(self._nodes):
             output += str(i) + ": " + node.to_str(self._sigma) + "\n"
         output += "------\n"
         output += str(self._initial_state) + ": Initial State\n"
+
+        # print accepting states
         for i, value in enumerate(self._accepting_states):
             output += str(value)
             if i != len(self._accepting_states) - 1:
