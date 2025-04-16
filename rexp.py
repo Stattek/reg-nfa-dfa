@@ -6,32 +6,148 @@ OPERATORS = "*.|"
 
 
 class Node:
-    def __init__(self):
+    def __init__(self, transition_dict, is_accepting):
         # keeps track of the alphabet (key) and holds a value
         # which is a list of indices to other nodes in the graph
-        self._transition_dict = {}
+        self.transition_dict = transition_dict
+        self.is_accepting = is_accepting
 
 
 # class to represent an NFA
 class NFA:
+
     def __init__(self, regex_str: str):
-        self._nfa = self.__evaluate_postfix_regex(regex_str)
+        self._nodes = self.__evaluate_postfix_regex(regex_str)
         self._initial_state = None
         self._accepting_states = []
 
-    def __convert_to_nfa(self, nfa):
-        pass
+    def __create_empty_nfa(self):
+        self._nodes = []
+        self._initial_state = None
+        self._accepting_states = []
 
-    def __alternation(self, first_nfa, second_nfa):
-        pass
+    def __create_single_char_nfa(self, char: chr):
+        # simplest NFA is just an initial (nonaccepting) state
+        # that transitions on the character to an accepting state
+        self.__create_empty_nfa()
+        self._nodes = [Node({char: 1}, False), Node({}, True)]
+        self._initial_state = 0
+        self._accepting_states = [1]
 
-    def __concatenation(self, first_nfa, second_nfa):
-        pass
+    def __convert_to_nfa(self, maybe_nfa):
+        if isinstance(maybe_nfa, str):
+            # create an NFA out of this symbol
+            return self.__create_single_char_nfa(maybe_nfa)
+        else:
+            # assume this is already an NFA
+            return maybe_nfa
 
-    def __star_closure(self, nfa):
-        pass
+    def __alternation(self, lhs, rhs):
 
-    def __evaluate_postfix_regex(self, regex: str):
+        lhs = self.__convert_to_nfa(lhs)
+        rhs = self.__convert_to_nfa(rhs)
+
+        new_start = self.__create_empty_nfa()
+        # we will have lambda transitions to the start of the lhs and rhs
+        new_start._nodes = [
+            Node(
+                {
+                    "": [
+                        lhs._initial_state + 1,
+                        rhs._initial_state + 1 + len(lhs._nodes),
+                    ]
+                },
+                False,
+            )
+        ]
+        new_start._initial_state = 0
+        new_start._accepting_states = []
+
+        lhs = self.__convert_to_nfa(lhs)
+        rhs = self.__convert_to_nfa(rhs)
+
+        for accepting_state in lhs._accepting_states:
+            lhs._nodes[accepting_state].is_accepting = False
+            # set the transition to the initial state of rhs (should always be 0)
+            # also, since we are going to append the node "lists," we add the
+            # length of the nodes list to the initial state index
+            try:
+                # try appending
+                lhs._nodes[accepting_state].transition_dict[""].append(
+                    len(lhs._nodes) + rhs._initial_state
+                )
+            except KeyError:
+                # create a new list on error
+                lhs._nodes[accepting_state].transition_dict[""] = [
+                    len(lhs._nodes) + rhs._initial_state
+                ]
+
+        # add the nodes and accepting states nodes
+        new_start._nodes.extend(lhs._nodes)
+        new_start._nodes.extend(rhs._nodes)
+        for val in lhs._accepting_states:
+            val += len(new_start._nodes)
+            new_start._accepting_states.append(val)
+        for val in rhs._accepting_states:
+            val += len(new_start._nodes)
+            new_start._accepting_states.append(val)
+
+    def __concatenation(self, lhs, rhs):
+        lhs = self.__convert_to_nfa(lhs)
+        rhs = self.__convert_to_nfa(rhs)
+
+        for accepting_state in lhs._accepting_states:
+            lhs._nodes[accepting_state].is_accepting = False
+            # set the transition to the initial state of rhs (should always be 0)
+            # also, since we are going to append the node "lists," we add the
+            # length of the nodes list to the initial state index
+            try:
+                # try appending
+                lhs._nodes[accepting_state].transition_dict[""].append(
+                    len(lhs._nodes) + rhs._initial_state
+                )
+            except KeyError:
+                # create a new list on error
+                lhs._nodes[accepting_state].transition_dict[""] = [
+                    len(lhs._nodes) + rhs._initial_state
+                ]
+
+        # add the nodes and accepting states nodes
+        lhs._nodes.extend(rhs._nodes)
+        for val in rhs._accepting_states:
+            val += len(lhs._nodes)
+            lhs._accepting_states.append(val)
+
+    def __star_closure(self, operand):
+        new_start = self.__create_empty_nfa()
+        # we will have a lambda transition to the start of the operand
+        new_start._nodes = [Node({"": [operand._initial_state + 1]}, True)]
+        new_start._initial_state = 0
+        new_start._accepting_states = [0]
+
+        operand = self.__convert_to_nfa(operand)
+
+        for accepting_state in operand._accepting_states:
+            # set the transition to the initial state of new_start (should always be 0)
+            # also, since we are going to append the node "lists," we add the
+            # length of the nodes list to the initial state index
+            try:
+                # try appending
+                operand._nodes[accepting_state].transition_dict[""].append(
+                    new_start._initial_state
+                )
+            except KeyError:
+                # create a new list on error
+                operand._nodes[accepting_state].transition_dict[""] = [
+                    new_start._initial_state
+                ]
+
+        operand._nodes.extend(operand._nodes)
+        for val in operand._accepting_states:
+            val += len(operand._nodes)
+            operand._accepting_states.append(val)
+
+    def evaluate_postfix_regex(self, regex: str):
         stack = []
         for symbol in regex:
             if symbol not in OPERATORS:
@@ -44,13 +160,16 @@ class NFA:
                     # rhs then lhs, since it is backwards
                     rhs = stack.pop()
                     lhs = stack.pop()
+                    print("evaluate alternation")
                     stack.insert(0, self.__alternation(lhs, rhs))
                 elif symbol == Operator.CONCATENATION:
                     rhs = stack.pop()
                     lhs = stack.pop()
+                    print("evaluate concatenation")
                     stack.insert(0, self.__concatenation(lhs, rhs))
                 elif symbol == Operator.STAR_CLOSURE:
                     lhs = stack.pop()
+                    print("evaluate star closure")
                     stack.insert(0, self.__star_closure(lhs))
         # the final answer is the last element in the stack
         return stack[0]
@@ -222,6 +341,16 @@ def main():
     postfix_regex = PostfixRegex(regex_str)
     # DEBUG: remove the print below
     print("final output=", postfix_regex._postfix_regex)
+
+    lhs = {"a": [1, 2, 3]}
+
+    lhs["a"].append(4)
+    try:
+        lhs["b"].append(5)
+    except KeyError:
+        lhs["b"] = [5]
+
+    print(lhs)
 
 
 if __name__ == "__main__":
