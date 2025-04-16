@@ -578,6 +578,7 @@ def main():
         print(nfa)
     else:
         print(regex_str, "is not a valid regular expession")
+        sys.exit(1)  # terminate program, this is not valid
 
 
 if __name__ == "__main__":
