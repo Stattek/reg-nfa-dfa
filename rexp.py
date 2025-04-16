@@ -35,6 +35,16 @@ class NFA:
             output += str(i) + ":  " + str(node) + "\n"
         return output
 
+    def __combine_sigma(self, lhs, rhs):
+        output = []
+        for value in lhs:
+            if value not in output:
+                output += value
+        for value in rhs:
+            if value not in output:
+                output += value
+        return output
+
     def create_single_char_nfa(char: chr):
         # simplest NFA is just an initial (nonaccepting) state
         # that transitions on the character to an accepting state
@@ -61,8 +71,6 @@ class NFA:
 
         nodes = []
         for node in nfa._nodes:
-            print(node)
-
             # make a copy of this node
             new_node_is_accepting = node.is_accepting
             new_node_transition_dict = {}
@@ -120,6 +128,11 @@ class NFA:
         for val in rhs._accepting_states:
             val += len(lhs._nodes) + new_start_inital_num_nodes
             new_start._accepting_states.append(val)
+
+        # combine sigma
+        new_sigma = self.__combine_sigma(lhs._sigma, rhs._sigma)
+        new_sigma = self.__combine_sigma(new_sigma, new_start._sigma)
+        new_start._sigma = new_sigma
         return new_start
 
     def __concatenation(self, lhs, rhs):
@@ -150,6 +163,10 @@ class NFA:
         for val in rhs._accepting_states:
             val += lhs_inital_num_nodes
             lhs._accepting_states.append(val)
+
+        # combine sigma
+        new_sigma = self.__combine_sigma(lhs._sigma, rhs._sigma)
+        lhs._sigma = new_sigma
         return lhs
 
     def __star_closure(self, operand):
@@ -183,6 +200,10 @@ class NFA:
         for val in operand._accepting_states:
             val += new_start_inital_num_nodes
             new_start._accepting_states.append(val)
+
+        # combine sigma
+        new_sigma = self.__combine_sigma(new_start._sigma, operand._sigma)
+        new_start._sigma = new_sigma
         return new_start
 
     def evaluate_postfix_regex(self, regex):
