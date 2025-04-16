@@ -53,7 +53,7 @@ class NFA:
                     lhs = stack.pop()
                     stack.insert(0, self.__star_closure(lhs))
         # the final answer is the last element in the stack
-        
+        return stack[0]
 
 
 class Operator(Enum):
