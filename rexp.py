@@ -369,6 +369,115 @@ class RegexValidator:
 
         return (True, regex_str)
 
+#
+#
+#---------------------------------------------------------------------------------------------------------
+# PART B
+#
+#
+class DFA:
+    def __init__(self):
+        self.state_list = []
+        self.accepting = []
+        self.initial = []
+        self.sigma = []
+
+    def dfa_to_string(self, sigma):
+        result = "DFA:\n"
+        result += "Sigma: " + " ".join(sigma) + "\n"
+        result += "------------------\n"
+        
+        # Add transitions for each state
+        for index, state in enumerate(self.state_list):
+            transitions = " ".join(str(state.transition_dict.get(symbol, "-")) for symbol in sigma)
+            result += f"{index}: {transitions}\n"
+        
+        result += "------------------\n"
+        
+        # Add initial state
+        initial_index = self.state_list.index(self.initial) if self.initial in self.state_list else "-"
+        result += f"{initial_index}: Initial State\n"
+        
+        # Add accepting states
+        accepting_indices = [str(self.state_list.index(state)) for state in self.accepting]
+        result += ",".join(accepting_indices) + ": Accepting State(s)\n"
+        
+        return result
+    
+    # gets the closure for a state
+    def closure(self, state: Node, input: str,nfa_states , visited=None) -> list:
+        if visited is None:
+            visited = set()
+        if state in visited:
+            return []
+        visited.add(state)
+        closure_list = state.transition_dict.get(input, [])
+        for next_state in closure_list:
+            closure_list.extend(self.closure(nfa_states[next_state], "", visited))
+        return closure_list
+
+    #checks if a closure is in a list of closures (this is for nfa to dfa)
+    def closure_in_list(closure_set, closure) -> int:
+        for i, existing_closure in enumerate(closure_set):
+            if set(existing_closure) == set(closure):
+                return i
+        return -1
+
+    #takes a NFA and converts it to a DFA
+    def nfa_to_dfa(self, nfa: NFA):
+        nfa_states = nfa._nodes 
+        initial = self.closure(nfa_states[0], "", nfa_states)
+        state_sets = [initial]
+        state_outputs = {}
+        index = 0
+        alphabet = nfa._sigma
+
+        while index < len(state_sets):
+            temp_transitions = {symbol: [] for symbol in alphabet}
+            for state in state_sets[index]:
+                for symbol in alphabet:
+                    temp_transitions[symbol].extend(self.closure(state, symbol, nfa_states))
+            state_outputs[index] = {}
+            for symbol in alphabet:
+                temp_closure = temp_transitions[symbol]
+                state_index = self.closure_in_list(state_sets, temp_closure)
+                if state_index == -1:
+                    state_sets.append(temp_closure)
+                    state_index = len(state_sets) - 1
+                state_outputs[index][symbol] = state_index
+            index += 1
+
+        # Construct the DFA
+        self.sigma = alphabet
+        index = 0
+        for state_set in state_sets:
+            accepting = any(state.is_accepting for state in state_set)
+            temp_node = Node(state_outputs[index],accepting)
+            self.state_list.append(temp_node)
+            if accepting:
+                self.accepting.append(temp_node)
+            index += 1
+
+        self.initial = self.state_list[0] if self.state_list else None
+#
+#
+# ---------------------------------------------------------------------------------
+# PART C
+#
+#
+
+#Minimises the DFA
+def minimize_dfa(self):
+    #Minimize the dfa
+    pass
+
+
+#
+#
+# ----------------------------------------------------------------------------------
+# MAIN
+#
+#
 
 def main():
     # take arguments
@@ -393,7 +502,16 @@ def main():
     nfa = nfa.evaluate_postfix_regex(postfix_regex.get_str())
 
     print(nfa)
+    
+    dfa = DFA()
+    dfa.nfa_to_dfa(nfa)
+    print(dfa.dfa_to_string)
 
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
