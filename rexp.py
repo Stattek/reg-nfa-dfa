@@ -13,6 +13,12 @@ class Node:
         self.transition_dict = transition_dict
         self.is_accepting = is_accepting
 
+    def __str__(self):
+        output = ""
+        for key, value in self.transition_dict.items():
+            output += key + "->" + str(value) + "\n"
+        return output
+
 
 # class to represent an NFA
 class NFA:
@@ -22,6 +28,12 @@ class NFA:
         self._initial_state = None
         self._accepting_states = []
         self._sigma = []
+
+    def __str__(self):
+        output = ""
+        for i, node in enumerate(self._nodes):
+            output += str(i + 1) + "  " + str(node)
+        return output
 
     def create_single_char_nfa(char: chr):
         # simplest NFA is just an initial (nonaccepting) state
@@ -59,8 +71,6 @@ class NFA:
                 new_node_transition_dict[transition] = [
                     value + amount for value in values
                 ]
-                print(transition, values)
-                print("new_node", new_node_transition_dict)
 
             new_node = Node(new_node_transition_dict, new_node_is_accepting)
             nodes.append(new_node)
@@ -381,6 +391,8 @@ def main():
 
     nfa = NFA()
     nfa = nfa.evaluate_postfix_regex(postfix_regex.get_str())
+
+    print(nfa)
 
 
 if __name__ == "__main__":
