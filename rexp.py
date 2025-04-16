@@ -338,16 +338,6 @@ def main():
     nfa = NFA()
     nfa = nfa.evaluate_postfix_regex(postfix_regex.get_str())
 
-    lhs = {"a": [1, 2, 3]}
-
-    lhs["a"].append(4)
-    try:
-        lhs["b"].append(5)
-    except KeyError:
-        lhs["b"] = [5]
-
-    print(lhs)
-
 
 if __name__ == "__main__":
     main()
