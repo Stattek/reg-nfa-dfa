@@ -120,7 +120,7 @@ class NFA:
         for val in rhs._accepting_states:
             val += len(lhs._nodes) + new_start_inital_num_nodes
             new_start._accepting_states.append(val)
-        return lhs
+        return new_start
 
     def __concatenation(self, lhs, rhs):
         lhs = self.__convert_to_nfa(lhs)
