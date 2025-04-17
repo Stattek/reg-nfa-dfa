@@ -1,0 +1,15 @@
+(ab)*|b(ab)*(a|b)*
+(a(bb)*a)*(b|a(bb)*ba)(aa|ab(bb)*ba|(b|ab(bb)*a)(a(bb)*a)*(b|a(bb)*ba))*
+(a|b)*|(a|c)*|(b|c)*
+(a(a|b)*b(a|b)*|b(a|b)*a(a|b)*)|(a(a|c)*c(a|c)*|c(a|c)*a(a|c)*)|(c(c|b)*b(c|b)*|b(c|b)*c(c|b)*)
+(aaa)*a
+b(bbb)*b
+(a|b)(ab)*(ba|bbb)*
+(a|ba*b)(ba*b|a(a|ba*b))*
+a*ba*|ba*(bb)*(a|ba)
+ab*|(ab|b)(bb)*(a|ba)
+(abc)*(ab|ac)*(ad)*
+ab*a|a(ba)*
+(aaaa)*|(bbb)*|(ccc)*|(a|b|c)*dd*(a|b|c)*
+(a|b|c|d)*d(a|b|c|d)*
+(a|b|c|d)*abbaab(a|b|c|d)*
