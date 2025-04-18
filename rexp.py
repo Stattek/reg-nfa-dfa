@@ -552,9 +552,10 @@ class RegexValidator:
 
         return (True, regex_str)
 
+
 #
 #
-#---------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------
 # PART B
 #
 #
@@ -578,17 +579,23 @@ class DFA:
         result += " ------------------\n"
         
         # Add initial state
-        initial_index = self.state_list.index(self.initial) if self.initial in self.state_list else "-"
+        initial_index = (
+            self.state_list.index(self.initial)
+            if self.initial in self.state_list
+            else "-"
+        )
         result += f"{initial_index}: Initial State\n"
-        
+
         # Add accepting states
-        accepting_indices = [str(self.state_list.index(state)) for state in self.accepting]
+        accepting_indices = [
+            str(self.state_list.index(state)) for state in self.accepting
+        ]
         result += ",".join(accepting_indices) + ": Accepting State(s)\n"
-        
+
         return result
-    
+
     # gets the closure for a state
-    def closure(self, state: Node, input: str,nfa_states: list , visited=None) -> list:
+    def closure(self, state: Node, input: str, nfa_states: list, visited=None) -> list:
         if visited is None:
             visited = set()
         if state in visited:
@@ -596,21 +603,30 @@ class DFA:
         visited.add(state)
         closure_list: list = state.transition_dict.get(input, [])
         for next_state in closure_list:
-            closure_list.extend(self.closure(nfa_states[next_state], "",nfa_states, visited))
+            closure_list.extend(
+                [
+                    value
+                    for value in self.closure(
+                        nfa_states[next_state], "", nfa_states, visited
+                    )
+                    if value not in closure_list
+                ]
+            )
         return closure_list
 
-    #checks if a closure is in a list of closures (this is for nfa to dfa)
+    # checks if a closure is in a list of closures (this is for nfa to dfa)
     def closure_in_list(self, closure_set: list, closure) -> int:
         for i, existing_closure in enumerate(closure_set):
             if set(existing_closure) == set(closure):
                 return i
         return -1
+
     #
     # TODO: LAMBDA TRANSITITON INCLUDES SELF MAYBE
     #
-    #takes a NFA and converts it to a DFA
+    # takes a NFA and converts it to a DFA
     def nfa_to_dfa(self, nfa: NFA):
-        nfa_states = nfa._nodes 
+        nfa_states = nfa._nodes
         initial = [0]
         initial.extend(self.closure(nfa_states[0], "", nfa_states))
         state_sets = [initial]
@@ -622,7 +638,9 @@ class DFA:
             temp_transitions = {symbol: [] for symbol in alphabet}
             for state in state_sets[index]:
                 for symbol in alphabet:
-                    temp_transitions[symbol].extend(self.closure(nfa_states[state], symbol, nfa_states))
+                    temp_transitions[symbol].extend(
+                        self.closure(nfa_states[state], symbol, nfa_states)
+                    )
             state_outputs[index] = {}
             for symbol in alphabet:
                 temp_closure = temp_transitions[symbol]
@@ -638,13 +656,15 @@ class DFA:
         index = 0
         for state_set in state_sets:
             accept = any(nfa_states[state].is_accepting for state in state_set)
-            temp_node = Node(state_outputs[index],accept)
+            temp_node = Node(state_outputs[index], accept)
             self.state_list.append(temp_node)
             if accept:
                 self.accepting.append(temp_node)
             index += 1
 
         self.initial = self.state_list[0] if self.state_list else None
+
+
 #
 #
 # ---------------------------------------------------------------------------------
@@ -652,9 +672,10 @@ class DFA:
 #
 #
 
-#Minimises the DFA
+
+# Minimises the DFA
 def minimize_dfa():
-    #Minimize the dfa
+    # Minimize the dfa
     pass
 
 
@@ -664,6 +685,7 @@ def minimize_dfa():
 # MAIN
 #
 #
+
 
 def main():
     # take arguments
@@ -691,20 +713,16 @@ def main():
     else:
         print(regex_str, "is not a valid regular expession")
         sys.exit(1)  # terminate program, this is not valid
-    
-    #Part B
+
+    # Part B
     dfa = DFA()
     dfa.nfa_to_dfa(nfa)
     print()
     print(dfa)
-    
-    #Part C
+
+    # Part C
     minimize_dfa()
+
 
 if __name__ == "__main__":
     main()
-
-
-
-
-

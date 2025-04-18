@@ -11,7 +11,7 @@
             "program": "${workspaceFolder}/rexp.py",
             "console": "integratedTerminal",
             "args": [
-                "a(abb)*|b",
+                "(ab)*|b(ab)*(a|b)*",
                 "test"
             ]
         }
