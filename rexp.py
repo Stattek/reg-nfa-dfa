@@ -568,15 +568,15 @@ class DFA:
 
     def __str__(self):
         result = "DFA:\n"
-        result += " Sigma:    " + "    ".join(self.sigma) + "\n"
+        result += " Sigma:\t" + "\t".join(self.sigma) + "\n"
         result += " ------------------\n"
 
         # Add transitions for each state
         for index, state in enumerate(self.state_list):
-            transitions = "    ".join(
+            transitions = "\t".join(
                 str(state.transition_dict.get(symbol, "-")) for symbol in self.sigma
             )
-            result += f"     {index}:    {transitions}\n"
+            result += f"     {index}: {transitions}\n"
 
         result += " ------------------\n"
 
