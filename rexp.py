@@ -568,17 +568,17 @@ class DFA:
 
     def __str__(self):
         result = "DFA:\n"
-        result += "Sigma: " + " ".join(self.sigma) + "\n"
-        result += "------------------\n"
+        result += " Sigma:\t\t" + "\t".join(self.sigma) + "\n"
+        result += " ------------------\n"
 
         # Add transitions for each state
         for index, state in enumerate(self.state_list):
-            transitions = " ".join(
+            transitions = "\t".join(
                 str(state.transition_dict.get(symbol, "-")) for symbol in self.sigma
             )
-            result += f"{index}: {transitions}\n"
+            result += f"     {index}: \t{transitions}\n"
 
-        result += "------------------\n"
+        result += " ------------------\n"
 
         # Add initial state
         initial_index = (
@@ -719,6 +719,7 @@ def main():
     # Part B
     dfa = DFA()
     dfa.nfa_to_dfa(nfa)
+    print()
     print(dfa)
 
     # Part C
