@@ -41,9 +41,9 @@ class Node:
             output += "-> {"
 
             try:
-                for i, value in enumerate(self.transition_dict[key]):
+                for j, value in enumerate(self.transition_dict[key]):
                     output += str(value)
-                    if i != len(self.transition_dict[key]) - 1:
+                    if j != len(self.transition_dict[key]) - 1:
                         output += ", "
             except:
                 # don't print anything if there is an error
