@@ -564,6 +564,7 @@ class DFA:
         self.accepting = []
         self.initial = []
         self.sigma = []
+        self._closure_cache = {}
 
     def __str__(self):
         result = "DFA:\n"
@@ -589,6 +590,24 @@ class DFA:
     
     # gets the closure for a state
     def closure(self, state: Node, input: str,nfa_states: list , visited=None) -> list:
+        # Check if the closure is already cached
+        cache_key = (state, input)
+        if cache_key in self._closure_cache:
+            return self._closure_cache[cache_key]
+        
+        # Compute the closure if not cached
+        if visited is None:
+            visited = set()
+        if state in visited:
+            return []
+        visited.add(state)
+        closure_list: list = state.transition_dict.get(input, [])
+        for next_state in closure_list:
+            closure_list.extend(self.closure(nfa_states[next_state], "", nfa_states, visited))
+        
+        # Cache the computed closure
+        self._closure_cache[cache_key] = closure_list
+        return closure_list
         if visited is None:
             visited = set()
         if state in visited:
