@@ -570,14 +570,16 @@ class DFA:
         result = "DFA:\n"
         result += " Sigma:    " + "    ".join(self.sigma) + "\n"
         result += " ------------------\n"
-        
+
         # Add transitions for each state
         for index, state in enumerate(self.state_list):
-            transitions = "    ".join(str(state.transition_dict.get(symbol, "-")) for symbol in self.sigma)
+            transitions = "    ".join(
+                str(state.transition_dict.get(symbol, "-")) for symbol in self.sigma
+            )
             result += f"     {index}:    {transitions}\n"
-        
+
         result += " ------------------\n"
-        
+
         # Add initial state
         initial_index = (
             self.state_list.index(self.initial)
