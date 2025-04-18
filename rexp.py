@@ -874,5 +874,6 @@ def main():
     print(min_dfa.accept_strings(file_name))
 
 
+
 if __name__ == "__main__":
     main()
