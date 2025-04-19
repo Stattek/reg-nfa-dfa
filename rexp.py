@@ -41,9 +41,9 @@ class Node:
             output += "-> {"
 
             try:
-                for i, value in enumerate(self.transition_dict[key]):
+                for j, value in enumerate(self.transition_dict[key]):
                     output += str(value)
-                    if i != len(self.transition_dict[key]) - 1:
+                    if j != len(self.transition_dict[key]) - 1:
                         output += ", "
             except:
                 # don't print anything if there is an error
@@ -566,29 +566,36 @@ class DFA:
         self.sigma = []
 
     def __str__(self):
-        result = "DFA:\n"
-        result += "Sigma: " + " ".join(self.sigma) + "\n"
-        result += "------------------\n"
-        
+        result = " Sigma:\t\t" + "\t".join(self.sigma) + "\n"
+        result += " ------------------\n"
+
         # Add transitions for each state
         for index, state in enumerate(self.state_list):
-            transitions = " ".join(str(state.transition_dict.get(symbol, "-")) for symbol in self.sigma)
-            result += f"{index}: {transitions}\n"
-        
-        result += "------------------\n"
-        
+            transitions = "\t".join(
+                str(state.transition_dict.get(symbol, "-")) for symbol in self.sigma
+            )
+            result += f"     {index}: \t{transitions}\n"
+
+        result += " ------------------\n"
+
         # Add initial state
-        initial_index = self.state_list.index(self.initial) if self.initial in self.state_list else "-"
+        initial_index = (
+            self.state_list.index(self.initial)
+            if self.initial in self.state_list
+            else "-"
+        )
         result += f"{initial_index}: Initial State\n"
-        
+
         # Add accepting states
-        accepting_indices = [str(self.state_list.index(state)) for state in self.accepting]
+        accepting_indices = [
+            str(self.state_list.index(state)) for state in self.accepting
+        ]
         result += ",".join(accepting_indices) + ": Accepting State(s)\n"
-        
+
         return result
-    
+
     # gets the closure for a state
-    def closure(self, state: Node, input: str,nfa_states: list , visited=None) -> list:
+    def closure(self, state: Node, input: str, nfa_states: list, visited=None) -> list:
         if visited is None:
             visited = set()
         if state in visited:
@@ -596,10 +603,18 @@ class DFA:
         visited.add(state)
         closure_list: list = state.transition_dict.get(input, [])
         for next_state in closure_list:
-            closure_list.extend(self.closure(nfa_states[next_state], "",nfa_states, visited))
+            closure_list.extend(
+                [
+                    value
+                    for value in self.closure(
+                        nfa_states[next_state], "", nfa_states, visited
+                    )
+                    if value not in closure_list
+                ]
+            )
         return closure_list
 
-    #checks if a closure is in a list of closures (this is for nfa to dfa)
+    # checks if a closure is in a list of closures (this is for nfa to dfa)
     def closure_in_list(self, closure_set: list, closure) -> int:
         for i, existing_closure in enumerate(closure_set):
             if set(existing_closure) == set(closure):
@@ -608,7 +623,7 @@ class DFA:
     #
     # TODO: LAMBDA TRANSITITON INCLUDES SELF MAYBE
     #
-    #takes a NFA and converts it to a DFA
+    # takes a NFA and converts it to a DFA
     def nfa_to_dfa(self, nfa: NFA):
         nfa_states = nfa._nodes 
         initial = [0]
@@ -622,7 +637,9 @@ class DFA:
             temp_transitions = {symbol: [] for symbol in alphabet}
             for state in state_sets[index]:
                 for symbol in alphabet:
-                    temp_transitions[symbol].extend(self.closure(nfa_states[state], symbol, nfa_states))
+                    temp_transitions[symbol].extend(
+                        self.closure(nfa_states[state], symbol, nfa_states)
+                    )
             state_outputs[index] = {}
             for symbol in alphabet:
                 temp_closure = temp_transitions[symbol]
@@ -638,13 +655,14 @@ class DFA:
         index = 0
         for state_set in state_sets:
             accept = any(nfa_states[state].is_accepting for state in state_set)
-            temp_node = Node(state_outputs[index],accept)
+            temp_node = Node(state_outputs[index], accept)
             self.state_list.append(temp_node)
             if accept:
                 self.accepting.append(temp_node)
             index += 1
 
         self.initial = self.state_list[0] if self.state_list else None
+
 #
 #
 # ---------------------------------------------------------------------------------
@@ -652,10 +670,147 @@ class DFA:
 #
 #
 
-#Minimises the DFA
-def minimize_dfa():
-    #Minimize the dfa
-    pass
+
+# Minimises the DFA
+    def minimize_dfa(self):
+        # Creating a table for determining distinguishability
+        num_states = len(self.state_list)
+        distinguishable = [[False] * num_states for _ in range(num_states)]
+
+        # Step 1: Mark where p and q are distinguishible
+        accepting_set = set(self.accepting)
+        for q in range(num_states):
+            for p in range(q):
+                if (self.state_list[q] in accepting_set) != (self.state_list[p] in accepting_set):
+                    distinguishable[q][p] = True
+                    distinguishable[p][q] = True  # Ensure symmetry on both "sides" of the table
+
+        # Step 2: Iteratively mark pairs as distinguishable
+        # we iterate through this loop until no new distinguishable pairs are found
+        new_distinguishable_pairs = True
+        while new_distinguishable_pairs:
+            new_distinguishable_pairs = False
+            for q in range(num_states):
+                for p in range(q):
+                    # Only check undistinguished pairs
+                    if not distinguishable[q][p]:  
+                        # Check if they lead to distinguishable states for any input
+                        for symbol in self.sigma:
+                            # Handle transitions - in DFA, we should have exactly one target state
+                            next_q = self.state_list[q].transition_dict.get(symbol)
+                            next_p = self.state_list[p].transition_dict.get(symbol)
+
+                            # If one has a transition and the other doesn't, they're distinguishable
+                            if (next_q is None and next_p is not None) or (next_q is not None and next_p is None):
+                                distinguishable[q][p] = True
+                                distinguishable[p][q] = True
+                                new_distinguishable_pairs = True
+                                break
+
+                            # If transitions lead to distinguishable states
+                            if next_q != next_p and distinguishable[next_q][next_p]:
+                                distinguishable[q][p] = True
+                                distinguishable[p][q] = True
+                                new_distinguishable_pairs = True
+                                break
+
+        # Step 3: Create equivalence classes
+        equivalence_classes = []
+        assigned = [False] * num_states
+
+        # for every state
+        for i in range(num_states):
+            # if it is not a part of an equivalence class, create a new class and add the state
+            if not assigned[i]:
+                new_class = [i]
+                assigned[i] = True
+
+                # for every state in the dfa
+                for j in range(num_states):
+                    # if j is not the same as i, j has not been assigned to a group, and j is distinguishable from i
+                    if i != j and not assigned[j] and not distinguishable[i][j]:
+                        # we add j to the class, and set j as assigned
+                        new_class.append(j)
+                        assigned[j] = True
+                # add this class to the list of equivalence classes
+                equivalence_classes.append(new_class)
+
+        # Step 4: Build the minimized DFA
+        minimized_dfa = DFA()
+        minimized_dfa.sigma = self.sigma.copy()
+
+        # Create new states for each equivalence class
+        for eq_class in equivalence_classes:
+            # creating a new state representative of all states in the current EC
+            representative_index = eq_class[0]
+            is_accepting = self.state_list[representative_index] in self.accepting
+            new_state = Node({}, is_accepting)
+
+            # appending the new state to the minimized dfa
+            minimized_dfa.state_list.append(new_state)
+            if is_accepting:
+                minimized_dfa.accepting.append(new_state)
+
+            # Setting initial state
+            if self.state_list[representative_index] == self.initial:
+                minimized_dfa.initial = new_state
+
+        # Step 5: Mapping state transitions to the minimized dfa
+        state_mapping = {}
+        for i, eq_class in enumerate(equivalence_classes):
+            for state_index in eq_class:
+                state_mapping[state_index] = i
+
+        # for each new state
+        for i, eq_class in enumerate(equivalence_classes):
+            # determine the representative state and it's index
+            representative_index = eq_class[0]
+            representative = self.state_list[representative_index]
+
+            for symbol in self.sigma:
+                if symbol in representative.transition_dict:
+                    # get the original destination from the dfa
+                    next_state_index = representative.transition_dict[symbol]
+
+                    # map index to corresponding index in the new state
+                    new_next_state_index = state_mapping[next_state_index]
+                    # add the transition to the minimized dfa
+                    minimized_dfa.state_list[i].transition_dict[symbol] = new_next_state_index
+
+        return minimized_dfa
+    
+
+    #Reads all strings from a given input file and returns the strings that are accepted by the DFA
+    def accept_strings(self, input_file):
+        result = ""
+        string_num = 0
+        
+        with open(input_file) as file:
+            for line in file:
+                strings = line.strip().split()
+                for string in strings:
+                    steps = list(string)
+
+                    # Start with the index of the initial state
+                    curState = self.state_list.index(self.initial)
+
+
+                    for step in steps:
+                            # Check if the step exists as part of the sigma
+                        if step not in self.state_list[curState].transition_dict:
+                            # Reject the string if the step is not valid
+                            curState = None
+                            break
+
+                        # Get the index of the next state
+                        curState = self.state_list[curState].transition_dict[step]
+
+                    # Check if curState is valid and if the final state is an accepting state, if so add it to the accepted strings
+                    if curState is not None and self.state_list[curState] in self.accepting:
+                        result += "     " + str(string_num) + ":" + string + "\n"
+                    string_num += 1
+        return result
+
 
 
 #
@@ -672,6 +827,7 @@ def main():
         print("Usage: {} <regex> <file_name>".format(sys.argv[0]))
         sys.exit(1)
     regex_str = sys.argv[1]
+    file_name = sys.argv[2]
 
     # validate regular expression
     (is_valid, regex_str) = RegexValidator.validate_and_modify_regex(regex_str)
@@ -691,19 +847,22 @@ def main():
     else:
         print(regex_str, "is not a valid regular expession")
         sys.exit(1)  # terminate program, this is not valid
-    
-    #Part B
+
+    # Part B
     dfa = DFA()
     dfa.nfa_to_dfa(nfa)
+    print("\nDFA:")
     print(dfa)
-    
-    #Part C
-    minimize_dfa()
+
+    # Part C
+    min_dfa = dfa.minimize_dfa()
+    print("Minimized DFA:")
+    print(min_dfa)
+
+    print("L("+regex_str+")")
+    print("Accepted strings in "+file_name+":")
+    print(min_dfa.accept_strings(file_name))
+
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
