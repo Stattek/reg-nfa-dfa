@@ -552,9 +552,10 @@ class RegexValidator:
 
         return (True, regex_str)
 
+
 #
 #
-#---------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------
 # PART B
 #
 #
@@ -620,12 +621,13 @@ class DFA:
             if set(existing_closure) == set(closure):
                 return i
         return -1
+
     #
     # TODO: LAMBDA TRANSITITON INCLUDES SELF MAYBE
     #
     # takes a NFA and converts it to a DFA
     def nfa_to_dfa(self, nfa: NFA):
-        nfa_states = nfa._nodes 
+        nfa_states = nfa._nodes
         initial = [0]
         initial.extend(self.closure(nfa_states[0], "", nfa_states))
         state_sets = [initial]
@@ -663,15 +665,14 @@ class DFA:
 
         self.initial = self.state_list[0] if self.state_list else None
 
-#
-#
-# ---------------------------------------------------------------------------------
-# PART C
-#
-#
+    #
+    #
+    # ---------------------------------------------------------------------------------
+    # PART C
+    #
+    #
 
-
-# Minimises the DFA
+    # Minimises the DFA
     def minimize_dfa(self):
         # Creating a table for determining distinguishability
         num_states = len(self.state_list)
@@ -681,9 +682,13 @@ class DFA:
         accepting_set = set(self.accepting)
         for q in range(num_states):
             for p in range(q):
-                if (self.state_list[q] in accepting_set) != (self.state_list[p] in accepting_set):
+                if (self.state_list[q] in accepting_set) != (
+                    self.state_list[p] in accepting_set
+                ):
                     distinguishable[q][p] = True
-                    distinguishable[p][q] = True  # Ensure symmetry on both "sides" of the table
+                    distinguishable[p][
+                        q
+                    ] = True  # Ensure symmetry on both "sides" of the table
 
         # Step 2: Iteratively mark pairs as distinguishable
         # we iterate through this loop until no new distinguishable pairs are found
@@ -693,7 +698,7 @@ class DFA:
             for q in range(num_states):
                 for p in range(q):
                     # Only check undistinguished pairs
-                    if not distinguishable[q][p]:  
+                    if not distinguishable[q][p]:
                         # Check if they lead to distinguishable states for any input
                         for symbol in self.sigma:
                             # Handle transitions - in DFA, we should have exactly one target state
@@ -701,7 +706,9 @@ class DFA:
                             next_p = self.state_list[p].transition_dict.get(symbol)
 
                             # If one has a transition and the other doesn't, they're distinguishable
-                            if (next_q is None and next_p is not None) or (next_q is not None and next_p is None):
+                            if (next_q is None and next_p is not None) or (
+                                next_q is not None and next_p is None
+                            ):
                                 distinguishable[q][p] = True
                                 distinguishable[p][q] = True
                                 new_distinguishable_pairs = True
@@ -775,16 +782,17 @@ class DFA:
                     # map index to corresponding index in the new state
                     new_next_state_index = state_mapping[next_state_index]
                     # add the transition to the minimized dfa
-                    minimized_dfa.state_list[i].transition_dict[symbol] = new_next_state_index
+                    minimized_dfa.state_list[i].transition_dict[
+                        symbol
+                    ] = new_next_state_index
 
         return minimized_dfa
-    
 
-    #Reads all strings from a given input file and returns the strings that are accepted by the DFA
+    # Reads all strings from a given input file and returns the strings that are accepted by the DFA
     def accept_strings(self, input_file):
         result = ""
         string_num = 0
-        
+
         with open(input_file) as file:
             for line in file:
                 strings = line.strip().split()
@@ -794,9 +802,8 @@ class DFA:
                     # Start with the index of the initial state
                     curState = self.state_list.index(self.initial)
 
-
                     for step in steps:
-                            # Check if the step exists as part of the sigma
+                        # Check if the step exists as part of the sigma
                         if step not in self.state_list[curState].transition_dict:
                             # Reject the string if the step is not valid
                             curState = None
@@ -806,11 +813,13 @@ class DFA:
                         curState = self.state_list[curState].transition_dict[step]
 
                     # Check if curState is valid and if the final state is an accepting state, if so add it to the accepted strings
-                    if curState is not None and self.state_list[curState] in self.accepting:
+                    if (
+                        curState is not None
+                        and self.state_list[curState] in self.accepting
+                    ):
                         result += "     " + str(string_num) + ":" + string + "\n"
                     string_num += 1
         return result
-
 
 
 #
@@ -819,6 +828,7 @@ class DFA:
 # MAIN
 #
 #
+
 
 def main():
     # take arguments
@@ -859,8 +869,8 @@ def main():
     print("Minimized DFA:")
     print(min_dfa)
 
-    print("L("+regex_str+")")
-    print("Accepted strings in "+file_name+":")
+    print("L(" + regex_str + ")")
+    print("Accepted strings in " + file_name + ":")
     print(min_dfa.accept_strings(file_name))
 
 
