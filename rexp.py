@@ -375,7 +375,11 @@ class NFA:
                         return None
                     stack.append(self.__star_closure(lhs))
         # the final answer is the last element in the stack
-        return self.__convert_to_nfa(stack.pop())
+        try:
+            final_value = stack.pop()
+            return self.__convert_to_nfa(final_value)
+        except:
+            return None
 
 
 class Operator(Enum):
