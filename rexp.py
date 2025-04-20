@@ -622,9 +622,6 @@ class DFA:
                 return i
         return -1
 
-    #
-    # TODO: LAMBDA TRANSITITON INCLUDES SELF MAYBE
-    #
     # takes a NFA and converts it to a DFA
     def nfa_to_dfa(self, nfa: NFA):
         nfa_states = nfa._nodes
@@ -672,7 +669,7 @@ class DFA:
     #
     #
 
-    # Minimises the DFA
+    # Minimizes the DFA
     def minimize_dfa(self):
         # Creating a table for determining distinguishability
         num_states = len(self.state_list)
@@ -839,11 +836,14 @@ def main():
     regex_str = sys.argv[1]
     file_name = sys.argv[2]
 
+    # save original regular expression
+    initial_regex_str = regex_str
+
     # validate regular expression
     (is_valid, regex_str) = RegexValidator.validate_and_modify_regex(regex_str)
     if not is_valid:
         # invalid regular expression
-        print("{} is not a valid regular expression".format(regex_str))
+        print("{} is not a valid regular expression".format(initial_regex_str))
         sys.exit(1)
 
     postfix_regex = PostfixRegex(regex_str)
@@ -852,10 +852,10 @@ def main():
     nfa = nfa.evaluate_postfix_regex(postfix_regex.get_postfix_regex())
 
     if nfa != None:
-        print(regex_str, "is a valid regular expression\n")
+        print(initial_regex_str, "is a valid regular expression\n")
         print(nfa)
     else:
-        print(regex_str, "is not a valid regular expession")
+        print(initial_regex_str, "is not a valid regular expession")
         sys.exit(1)  # terminate program, this is not valid
 
     # Part B
@@ -869,7 +869,7 @@ def main():
     print("Minimized DFA:")
     print(min_dfa)
 
-    print("L(" + regex_str + ")")
+    print("L(" + initial_regex_str + ")")
     print("Accepted strings in " + file_name + ":")
     print(min_dfa.accept_strings(file_name))
 
